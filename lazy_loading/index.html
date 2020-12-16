@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+        }
+        
+        ul,
+        li {
+            list-style: none;
+        }
+        
+        html,
+        body,
+        #container {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        header.header {
+            /* 因为li是浮动脱离文档流的，所以要让头部靠前也得脱离文档流 */
+            position: absolute;
+            z-index: 1;
+            height: 10vh;
+            width: 100%;
+            background-color: antiquewhite;
+            text-align: center;
+            line-height: 10vh;
+            font-size: 20px;
+            font-family: '宋体';
+            font-weight: 700;
+        }
+        
+        .wrap {
+            position: relative;
+            padding-top: 10vh;
+            width: 100%;
+            /* overflow: hidden; */
+        }
+        
+        .wrap li {
+            display: inline-block;
+            width: 46vw;
+            height: 46vw;
+            margin: 3vw 0 0 3vw;
+            border-radius: 6px;
+            overflow: hidden;
+            background: url('img/loadingImg.gif') no-repeat;
+            background-position: center center;
+        }
+        
+        .wrap li img {
+            display: block;
+            width: 100%;
+            transition: opacity 0.5s;
+        }
+        
+        .pull-up-update {
+            position: absolute;
+            width: 100%;
+            height: 20vh;
+            bottom: -20vh;
+            font-size: 22px;
+            text-align: center;
+            line-height: 20vh;
+        }
+        
+        .pull-up-update img {
+            vertical-align: middle;
+            display: inline-block;
+            height: 4vh;
+            width: 4vh;
+        }
+        
+        #big-page-show {
+            position: absolute;
+            left: 0;
+            top: 0;
+            z-index: 10;
+            width: 100%;
+            height: 100%;
+            background-color: #fff;
+            transform: scale(0);
+            transition: transform 0.5s;
+        }
+        
+        #show-page {
+            position: relative;
+            top: 10vh;
+            height: 90vh;
+            width: 100%;
+        }
+        
+        #show-page img {
+            position: absolute;
+            left: 0;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            margin: auto;
+        }
+        
+        .close {
+            position: absolute;
+            font-size: 30px;
+            right: 5vw;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container">
+        <header class="header">无情的图片加载机器</header>
+        <div class="wrap">
+            <ul>
+            </ul>
+            <div class="pull-up-update">
+                <img src="img/箭头.png" alt="">
+                <span>上拉可以加载更多</span>
+            </div>
+        </div>
+        <div id="big-page-show">
+            <header class="header">大图预览
+                <span class="close">&times;</span>
+            </header>
+            <section id="show-page">
+                <img id="big-page" src="" alt="">
+            </section>
+        </div>
+    </div>
+    <script src="js/transformCSS.js"></script>
+    <script src="js/tweenAnimation.js"></script>
+    <script src="js/touchscroll.js"></script>
+    <script src="js/gesture.js"></script>
+    <script src="js/touchview.js"></script>
+    <script>
+        let imgSrc = null;
+        let id = 106;
+        //每次加载数
+        let num = 12;
+        // 页码
+        let page = 1;
+        const container = document.querySelector('#container');
+        const wrap = document.querySelector('.wrap');
+        const ul = document.querySelector('.wrap ul');
+        const upNode = document.querySelector('.pull-up-update');
+        const bigPageShow = document.querySelector('#big-page-show');
+        const close = document.querySelector('.close');
+        const bigPage = document.querySelector('#big-page');
+        //判断是否滑动
+        let isMoving = false;
+
+        function createLi() {
+            for (let i = 0; i < num; i++) {
+                let li = document.createElement('li');
+                //标示这是一个未加载的图片
+                li.dataset.isLoading = 0;
+                let img = document.createElement('img');
+                imgSrc = `https://picsum.photos/id/${id}/300/300`;
+                // liImgs[i].setAttribute('src', imgSrc);
+                //要动态加载图片，则初始化时不能直接设置src属性，
+                //img的src属性可以存到li标签中
+                li.dataset.src = imgSrc;
+                li.appendChild(img);
+                ul.appendChild(li);
+                id++;
+            }
+            loadImg();
+        };
+        createLi();
+
+        //屏幕滑动事件
+        // container.addEventListener('touchmove', function(e) {
+        //     loadImg();
+        // })
+
+        function loadImg() {
+            // 检测图片状态
+            // 遍历图片
+            const lis = document.querySelectorAll('.wrap li');
+            lis.forEach(function(li) {
+                if (li.dataset.isLoading == 1) return;
+                //获取元素相对父级的偏移量
+                let disLi = li.offsetTop;
+                //获取容器的高度
+                let h = container.offsetHeight;
+                //获取容器的向上偏移量
+                let wrapTranslateY = -transformCSS(wrap, 'translateY');
+                //判断该图片是否进入了视图，进入则加载图片
+                if (disLi <= h + wrapTranslateY) {
+                    //标识图片已加载
+                    li.dataset.isLoading = 1;
+                    //加载图片
+                    //延时加载
+                    // setTimeout(function() {
+                    let img = li.querySelector('img');
+                    img.style.opacity = 0;
+                    //设置src属性
+                    img.src = li.dataset.src;;
+                    //图片加载之后运行
+                    img.onload = function() {
+                            img.style.opacity = 1;
+                        }
+                        //图片加载失败事件
+                    img.onerror = function() {
+                            img.src = './img/noimage.png';
+                            img.style.opacity = 1;
+                        }
+                        // }, 1000)
+                }
+            });
+        }
+
+        document.documentElement.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+            }, {
+                passive: false
+            })
+            //传入回调函数
+        var bp = new Touchscroll('#container', '.wrap', {
+            move: function() {
+                //每次滑动后加速都检测图片状态
+                loadImg();
+                //在边界向上拉加载图片逻辑
+                let wrapTranslateY = transformCSS(wrap, 'translateY');
+                let minTranslateY = container.offsetHeight - wrap.offsetHeight;
+                if (wrapTranslateY < minTranslateY) {
+                    //划出了边界
+                    //修改上拉的元素尺寸大小
+                    //disY为划出的距离 
+                    let disY = Math.abs(wrapTranslateY - minTranslateY);
+                    //获取上拉元素高度
+                    let upNodeHeight = upNode.offsetHeight;
+                    //元素放大比例
+                    upNode.scale = Math.min(disY / upNodeHeight, 1); //放大比例小于1（最大为1）
+                    transformCSS(upNode, 'scale', upNode.scale);
+                }
+            },
+            end: function() {
+                //判断是否需要加载
+                if (upNode.scale >= 1) {
+                    // console.log('进行加载');
+                    createLi();
+                    upNode.scale = 0;
+                    //跟新滚动条的长度
+                    // console.log(container.init);
+                    container.init();
+                    // console.log(bp.app.init);
+                    //跟新设置滚动条位置
+                    var scrollBar = document.querySelector('.scroll-bar');
+                    var scrollY = -(container.translateY / wrap.offsetHeight * container.offsetHeight);
+                    //contianer.translateY 是wrpa移动的距离，只是把wrap移动的距离赋给了container对象作为属性
+                    //清除定时器，因为在这设置滚动条位置后，tweenAnimation函数的定时器还在运行，使得滚动条位置设置失效
+                    clearInterval(scrollBar.timer.translateY);
+                    clearInterval(wrap.timer.translateY);
+                    transformCSS(scrollBar, 'translateY', scrollY);
+                }
+            }
+        });
+        //点击图片放大
+        // const lis = wrap.querySelectorAll('ul li');
+        // lis.forEach(function(li) {
+        //     li.addEventListener('touchend', function(e) {
+        //         if (isMoving) return;
+        //         transformCSS(bigPageShow, 'scale', 1);
+        //         bigPage.src = li.dataset.src;
+        //设置放大的中心点
+        //         let x = e.changedTouches[0].clientX;
+        //         let y = e.changedTouches[0].clientY;
+        //         bigPageShow.style.transformOrigin = x + 'px ' + y + 'px'; //注意px后面的空格
+        //     })
+        // })
+        //上面代码：新创建的li和img不能有点击放大效果
+        //故该为事件委托绑定以上事件内容
+        ul.addEventListener('touchend', function(e) {
+                // console.log(e.target.nodeName);
+                if (e.target.nodeName === 'IMG') {
+                    if (isMoving) return;
+                    transformCSS(bigPageShow, 'scale', 1);
+                    bigPage.src = e.target.src;
+                    let x = e.changedTouches[0].clientX;
+                    let y = e.changedTouches[0].clientY;
+                    bigPageShow.style.transformOrigin = x + 'px ' + y + 'px';
+                }
+            })
+            //大图预览 点击关闭事件
+        close.addEventListener('touchstart', function() {
+            transformCSS(bigPageShow, 'scale', 0);
+
+        })
+        bigPageShow.addEventListener('transitionend', function() {
+                //初始化图片缩放和旋转比例
+                transformCSS(bigPage, 'scale', 1);
+                transformCSS(bigPage, 'rotate', 0);
+            })
+            //为防止惯性移动定时器的干扰(给container绑定touchmove事件中 isMoving松手后又变为true)
+            //单独给container绑定事件修改isMoving
+        wrap.addEventListener('touchmove', function(e) {
+            isMoving = true;
+        })
+        wrap.addEventListener('touchend', function() {
+                isMoving = false;
+            })
+            //实现图片缩放旋转
+        new Touchview('#big-page');
+    </script>
+
+</body>
+
+</html>
