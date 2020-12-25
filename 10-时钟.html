@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+        
+        ul {
+            list-style: none;
+        }
+        
+        canvas {
+            background: #eee;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translateX(-50%) translateY(-50%);
+        }
+    </style>
+</head>
+
+<body>
+    <canvas></canvas>
+    <script>
+        const canvas = document.querySelector('canvas');
+        //设置画布的宽和高
+        canvas.width = 600;
+        canvas.height = 600;
+        let ctx = canvas.getContext('2d');
+        setInterval(function() {
+            ctx.save();
+            //清空画布
+            ctx.clearRect(0, 0, 2000, 2000);
+            //绘制表盘圆圈
+            ctx.beginPath();
+            ctx.arc(300, 300, 200, 0, 360 / 180 * Math.PI)
+            ctx.stroke();
+            //移动坐标系至圆盘中心点
+            ctx.translate(300, 300);
+            //绘制秒针刻度
+            for (let i = 0; i < 60; i++) {
+                ctx.rotate(360 / 60 / 180 * Math.PI)
+                    //先转6度，第一笔画在1秒上，再转再画，转4此到达5秒
+                if (i % 5 == 4) {
+                    //绘制时针刻度
+                    ctx.beginPath();
+                    ctx.lineWidth = 4;
+                    ctx.moveTo(180, 0);
+                    ctx.lineTo(195, 0);
+                    ctx.stroke();
+                    continue;
+                }
+                ctx.beginPath();
+                ctx.lineWidth = 2;
+                ctx.moveTo(185, 0);
+                ctx.lineTo(195, 0);
+                ctx.stroke();
+            }
+
+            //
+            let date = new Date();
+            let h = date.getHours();;
+            let m = date.getMinutes();
+            let s = date.getSeconds();
+            //时针旋转角度
+            let hRotate = (h * 60 + m) / 60 * 30;
+            //分针
+            let mRotate = (m * 60 + s) / 60 * 6;
+            //秒针
+            let sRotate = s * 6;
+            ctx.rotate(-90 / 180 * Math.PI)
+                //绘制时针
+            ctx.save();
+            ctx.rotate(hRotate / 180 * Math.PI)
+            ctx.beginPath();
+            ctx.lineWidth = 6;
+            ctx.lineCap = 'round'
+            ctx.moveTo(-10, 0);
+            ctx.lineTo(120, 0);
+            ctx.strokeStyle = 'coral'
+            ctx.stroke();
+            ctx.restore();
+            //绘制分针
+            ctx.save();
+            ctx.rotate(mRotate / 180 * Math.PI)
+            ctx.beginPath();
+            ctx.lineWidth = 4;
+            ctx.lineCap = 'round';
+            ctx.moveTo(-18, 0);
+            ctx.lineTo(130, 0);
+            ctx.strokeStyle = 'hotpink';
+            ctx.stroke();
+            ctx.restore();
+            //绘制秒针
+            ctx.save();
+            ctx.rotate(sRotate / 180 * Math.PI)
+            ctx.beginPath();
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'square';
+            ctx.moveTo(-22, 0);
+            ctx.lineTo(155, 0);
+            ctx.strokeStyle = 'red';
+            ctx.stroke();
+            ctx.restore();
+            //绘制圆点
+            ctx.beginPath();
+            ctx.arc(0, 0, 6, 0, 360 / 180 * Math.PI);
+            ctx.fillStyle = 'yellowgreen'
+            ctx.fill();
+            //这里恢复的是第一个save()
+            ctx.restore();
+        }, 1000);
+    </script>
+</body>
+
+</html>
