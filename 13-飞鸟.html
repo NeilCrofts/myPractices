@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        canvas {
+            position: absolute;
+            left: 0;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            margin: auto;
+            border: black 1px solid;
+        }
+        
+        button {
+            display: inline-block;
+            width: 50px;
+            height: 30px;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas width="600" height="500"></canvas>
+    <button>加速</button>
+    <button>减速</button>
+    <script>
+        const btns = document.querySelectorAll('button');
+        const canvas = document.querySelector('canvas');
+        let ctx = canvas.getContext('2d');
+        const img = new Image();
+        //飞鸟的位置值
+        let w = 100;
+        let left = -w;
+        //图片下标
+        let i = 1;
+        //定时器间隔时间
+        let time = 60;
+        let timer = null;
+
+        function fly(time) {
+            clearInterval(timer);
+            timer = setInterval(function() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                img.src = 'img/q_r' + (i % 8 + 1) + '.jpg';
+                i++;
+                img.onload = function() {
+                    ctx.drawImage(img, left += 2, canvas.height / 2, w, img.height * w / img.width);
+                }
+            }, time)
+        }
+        fly(60);
+        //加速按钮
+        btns[0].onclick = function() {
+                time -= 10;
+                fly(time);
+            }
+            //减速按钮
+        btns[1].onclick = function() {
+            time += 10;
+            fly(time);
+        }
+    </script>
+</body>
+
+</html>
