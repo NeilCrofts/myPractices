@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        canvas {
+            position: absolute;
+            left: 0;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            margin: auto;
+            background: url('./img/img22.jpg');
+        }
+    </style>
+</head>
+
+<body>
+    <canvas width="800" height="500"></canvas>
+    <script>
+        const canvas = document.querySelector('canvas');
+        let ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ccc'
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        let isDown = false;
+        canvas.onmousedown = function(e) {
+            isDown = true;
+            ctx.lineWidth = 30;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round'
+            ctx.moveTo(e.offsetX, e.offsetY);
+        }
+        canvas.onmousemove = function(e) {
+            if (!isDown) return;
+            ctx.globalCompositeOperation = 'destination-out';
+            // ctx.rect(e.offsetX, e.offsetY, 15, 15);
+            // ctx.fill();
+            ctx.lineTo(e.offsetX, e.offsetY);
+            ctx.stroke();
+        }
+        window.onmouseup = function() {
+            isDown = false;
+        }
+    </script>
+</body>
+
+</html>
